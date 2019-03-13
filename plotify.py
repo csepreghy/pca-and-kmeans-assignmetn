@@ -62,10 +62,8 @@ class Plotify:
       ylabel='Y label',
       title='Title',
       legend_labels=('Men', 'Women'),
-      vectors=[],
-      mean=[],
-      variance=[],
-      components=[]
+      arrows=[],
+      equal_axis=False
   ):
     fig, ax = self.get_figax()
 
@@ -83,23 +81,21 @@ class Plotify:
           c=self.plot_colors[i]
       )
 
-    # vecs = plt.quiver(eigen_vectors[0][0], eigen_vectors[0][1], eigen_values[0], angles="xy", scale_units="xy", scale=1, color='r')
-    # for i, v in enumerate(vectors['vector_list']):
-    #   ax.arrow(
-    #     vectors['origins'][i][0], 
-    #     vectors['origins'][i][1], 
-    #     vectors['origins'][i][0] + v[0],
-    #     vectors['origins'][i][1] + v[1],
-    #     head_width=0.05, head_length=0.1, fc='k', ec='k')
-
-    for length, vector in zip(variance, components):
-      v = vector * 3 * np.sqrt(length)
-      self.draw_vector(mean, mean + v, ax)
-    
-    plt.axis('equal');
+    if len(arrows) > 0:
+      for arrow in arrows:
+        plt.arrow(
+          x=arrow['x'],
+          y=arrow['y'],
+          dx=arrow['dx'],
+          dy=arrow['dy'],
+          width=arrow['width'],
+          color=arrow['color'],
+          alpha=0.8)
 
     ax.grid(self.use_grid, color=self.grid_color)
     ax.legend(legend_labels, facecolor=self.legend_color)
+    
+    if equal_axis == True: plt.axis('equal')
 
     plt.show()
 
