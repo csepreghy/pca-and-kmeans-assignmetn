@@ -17,7 +17,7 @@ plt.style.use('ggplot')
 # the eigen_vectors have the same order as their associated eigen_values
 
 
-def pca(X):
+def pca(X, show_pc_plots=True):
   eigen_values = []
   eigen_vectors = []
 
@@ -28,17 +28,15 @@ def pca(X):
   covariance_matrix = np.cov(X.T)
 
   eigen_values, eigen_vectors = np.linalg.eig(covariance_matrix)
-  key = np.argsort(eigen_values)[::-1][:2]
+  key = np.argsort(eigen_values)[::-1][:len(eigen_values)]
   eigen_values, eigen_vectors = eigen_values[key], eigen_vectors[:, key]
 
   # Only for visual pruposes. Both of them count as eigenvectors
-  eigen_vectors[0] = -eigen_vectors[0]
+  if len(eigen_values) == 2:
+    eigen_vectors[0] = -eigen_vectors[0]
 
-  pca = PCA(n_components=2)
+  pca = PCA(n_components=len(eigen_values))
   pca.fit(X)
-
-  print('pca.components_\n', pca.components_) 
-  print('pca.explained_variance_\n', pca.explained_variance_)
 
   arrows = []
   
@@ -61,14 +59,69 @@ def pca(X):
     alpha=1,
     xlabel='Unemployment rate (%)',
     ylabel='murders per year per 1,000,000 inhabitants',
-    title='Murder rates in correlaction with unemployment',
+    title='Murder rates in correlaction with unemployment \n (Standardized)',
     legend_labels=(''),
     arrows=arrows,
     equal_axis=True
   )
 
-  print('eigen_values', eigen_values)
-  print('eigen_vectors', eigen_vectors)
+  print('pca.explained_variance_\n', pca.explained_variance_)
+  print('eigen_values \n', eigen_values)
+
+  print('pca.components_[0]\n', pca.components_)
+  print('eigen_vectors[0]\n', eigen_vectors)
+
+
+  # Make a list of (eigenvalue, eigenvector) tuples
+  eig_pairs = [(np.abs(eigen_values[i]), eigen_vectors[:, i])
+              for i in range(len(eigen_values))]
+
+  # Sort the (eigenvalue, eigenvector) tuples from high to low
+  eig_pairs.sort()
+  eig_pairs.reverse()
+
+  # Visually confirm that the list is correctly sorted by decreasing eigenvalues
+  print('Eigenvalues in descending order:')
+  for i in eig_pairs:
+      print(i[0])
+  
+  total = sum(eigen_values)
+  
+  print('total \n', total)
+
+  var_exp = [(i / total)*100 for i in sorted(eigen_values, reverse=True)]
+
+  total_cumulative_explain_varience = 0
+  cumulative_explain_variences = []
+
+  for eigen_value in sorted(eigen_values, reverse=True):
+    percentage = eigen_value / total * 100
+    print('percentage', percentage)
+    total_cumulative_explain_varience += percentage
+    cumulative_explain_variences.append(total_cumulative_explain_varience)
+
+  print('cumulative_explain_variences', cumulative_explain_variences)
+  
+  if show_pc_plots == True:
+    xticks = []
+    for _ in range(len(eigen_values)):
+      xticks.append('PC ' + str(_))
+
+    plotify.bar(
+      x_list=range(len(eigen_values)),
+      y_list=var_exp,
+      title='PCA Analysis',
+      ylabel='% Variance Explained',
+      xticks=xticks,
+      rotation=30
+    )
+
+    plotify.plot(
+      y_list=cumulative_explain_variences,
+      title='PCA Analysis',
+      ylabel='% Variance Explained',
+      xlabel='Number of Features',
+    )
 
 
   return eigen_values, eigen_vectors

@@ -4,13 +4,13 @@ import matplotlib.ticker as ticker
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 class Plotify:
   def __init__(self):
     # Basic configuration
     self.use_grid = True
-    rcParams['font.sans-serif'] = ['Arial']
+    
     plt.style.use('dark_background')
+
 
     # Color Constants
     self.background_color = '#1C2024'
@@ -22,6 +22,10 @@ class Plotify:
     self.c_white = '#FFFFFF'
 
     self.plot_colors = [self.c_orange, self.c_cyan, self.c_red]
+    
+    rcParams.update({
+      'font.sans-serif': 'Arial'
+    })
 
   def boxplot(self, data, labels, title, ylabel):
     fig, ax = plt.subplots()
@@ -97,6 +101,7 @@ class Plotify:
     
     if equal_axis == True: plt.axis('equal')
 
+    plt.savefig('file', facecolor=self.background_color, dpi=120)
     plt.show()
 
   def histogram(
@@ -130,7 +135,10 @@ class Plotify:
       ymin=0,
       ymax=None,
       linewidth=0.8,
-      use_x_list_as_xticks=False
+      use_x_list_as_xticks=False,
+      xticks=[],
+      rotation=0,
+      show=True
   ):
     fig, ax = self.get_figax()
 
@@ -146,16 +154,47 @@ class Plotify:
     if use_x_list_as_xticks == True:
       plt.xticks(x_list)
     
-    plt.xticks(rotation=70)
+    if len(xticks) > 0:
+      ax.set_xticklabels(xticks)
+      ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    
+    plt.xticks(rotation=rotation)
     plt.tight_layout()
-    plt.show()
+    if show == True: plt.show()
+    
+    return ax
+
+  def plot(
+    self,
+    y_list,
+    show=True,
+    ylabel='Y label',
+    xlabel='X label',
+    title='Title',
+    use_x_list_as_xticks=False,
+  ):
+    fig, ax = self.get_figax()
+
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    
+    plt.plot(y_list, color=self.c_orange)
+    if show == True: plt.show()
+
+    return
+
 
   def get_figax(self):
     fig, ax = plt.subplots()
 
     fig.patch.set_facecolor(self.background_color)
 
+
     ax.set_facecolor(self.background_color)
+    ax.tick_params(colors=self.c_white)
+    ax.xaxis.label.set_color(self.c_white)
+    ax.yaxis.label.set_color(self.c_white)
     ax.grid(self.use_grid, color=self.grid_color)
 
     return fig, ax

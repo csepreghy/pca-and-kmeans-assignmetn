@@ -7,7 +7,12 @@ from pca import pca
 
 murderdata = np.loadtxt('murderdata2d.txt')
 
-print(murderdata)
+eigen_values, eigen_vectors = pca(murderdata, show_pc_plots=False)
 
-X = murderdata
-eigen_values, eigen_vectors = pca(murderdata)
+
+weed_crop_train = np.loadtxt('IDSWeedCropTrain.csv', delimiter=',')
+weed_crop_test = np.loadtxt('IDSWeedCropTest.csv', delimiter=',')
+
+eigen_values, eigen_vectors = pca(weed_crop_train)
+
+# print(eigen_values, eigen_vectors)
