@@ -17,12 +17,12 @@ plt.style.use('ggplot')
 # the eigen_vectors have the same order as their associated eigen_values
 
 
-def pca(X, show_pc_plots=True):
+def pca(X, show_pc_plots=True, show_scatter_plot=True):
   eigen_values = []
   eigen_vectors = []
 
   # First we standardize the data to get unit vectors for the eigenvectors
-  scaler = StandardScaler()
+  scaler = StandardScaler(with_mean=True, with_std=True)
   X = scaler.fit_transform(X)
 
   covariance_matrix = np.cov(X.T)
@@ -31,39 +31,43 @@ def pca(X, show_pc_plots=True):
   key = np.argsort(eigen_values)[::-1][:len(eigen_values)]
   eigen_values, eigen_vectors = eigen_values[key], eigen_vectors[:, key]
 
-  # Only for visual pruposes. Both of them count as eigenvectors
-  if len(eigen_values) == 2:
-    eigen_vectors[0] = -eigen_vectors[0]
+
+
+  if show_scatter_plot == True:
+  
+    # Only for visual pruposes. Skipping this step would produce equally valid eigenvectors
+    if len(eigen_values) == 2:
+      eigen_vectors[0] = -eigen_vectors[0]
+
+    arrows = []
+    
+    for vector, value in zip(eigen_vectors, eigen_values):
+      arrow = {
+        'x': 0,
+        'y': 0,
+        'dx': np.sqrt(value) * vector[0],
+        'dy': np.sqrt(value) * vector[1],
+        'width': 0.03,
+        'color': '#4FB99F'
+      }
+
+      arrows.append(arrow)
+
+    plotify.scatter_plot(
+      x_list=[X[:, 0]],
+      y_list=[X[:, 1]],
+      linewidth=0.25,
+      alpha=1,
+      xlabel='Unemployment rate (%)',
+      ylabel='murders per year per 1,000,000 inhabitants',
+      title='Murder rates in correlaction with unemployment \n (Standardized)',
+      legend_labels=(''),
+      arrows=arrows,
+      equal_axis=True
+    )
 
   pca = PCA(n_components=len(eigen_values))
   pca.fit(X)
-
-  arrows = []
-  
-  for vector, value in zip(eigen_vectors, eigen_values):
-    arrow = {
-      'x': 0,
-      'y': 0,
-      'dx': np.sqrt(value) * vector[0],
-      'dy': np.sqrt(value) * vector[1],
-      'width': 0.03,
-      'color': '#4FB99F'
-    }
-
-    arrows.append(arrow)
-
-  plotify.scatter_plot(
-    x_list=[X[:, 0]],
-    y_list=[X[:, 1]],
-    linewidth=0.25,
-    alpha=1,
-    xlabel='Unemployment rate (%)',
-    ylabel='murders per year per 1,000,000 inhabitants',
-    title='Murder rates in correlaction with unemployment \n (Standardized)',
-    legend_labels=(''),
-    arrows=arrows,
-    equal_axis=True
-  )
 
   print('pca.explained_variance_\n', pca.explained_variance_)
   print('eigen_values \n', eigen_values)
@@ -94,11 +98,14 @@ def pca(X, show_pc_plots=True):
   total_cumulative_explain_varience = 0
   cumulative_explain_variences = []
 
-  for eigen_value in sorted(eigen_values, reverse=True):
+  for i, eigen_value in enumerate(sorted(eigen_values, reverse=True)):
     percentage = eigen_value / total * 100
     print('percentage', percentage)
     total_cumulative_explain_varience += percentage
     cumulative_explain_variences.append(total_cumulative_explain_varience)
+
+  
+
 
   print('cumulative_explain_variences', cumulative_explain_variences)
   

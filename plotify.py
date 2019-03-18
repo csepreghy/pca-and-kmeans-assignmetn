@@ -101,7 +101,7 @@ class Plotify:
     
     if equal_axis == True: plt.axis('equal')
 
-    plt.savefig('file', facecolor=self.background_color, dpi=120)
+    plt.savefig(title, facecolor=self.background_color, dpi=120)
     plt.show()
 
   def histogram(
