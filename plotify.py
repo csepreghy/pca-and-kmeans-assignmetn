@@ -65,16 +65,17 @@ class Plotify:
       xlabel='X label',
       ylabel='Y label',
       title='Title',
-      legend_labels=('Men', 'Women'),
+      legend_labels=(''),
       arrows=[],
-      equal_axis=False
+      equal_axis=False,
+      tickfrequencyone=True
   ):
     fig, ax = self.get_figax()
 
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
     ax.set_title(title)
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    if tickfrequencyone == True: ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
 
     for i, x in enumerate(x_list):
       ax.scatter(
@@ -82,7 +83,8 @@ class Plotify:
           y_list[i],
           linewidths=linewidth,
           alpha=alpha,
-          c=self.plot_colors[i]
+          c=self.plot_colors[i],
+          edgecolor='#333333'
       )
 
     if len(arrows) > 0:
@@ -101,7 +103,48 @@ class Plotify:
     
     if equal_axis == True: plt.axis('equal')
 
-    plt.savefig(title, facecolor=self.background_color, dpi=120)
+    #plt.savefig((title + str(np.random.rand(1)[0]) + '.png'),
+    #            facecolor=self.background_color, dpi=180)
+    plt.show()
+
+  def scatter3d(
+      self,
+      x,
+      y,
+      z,
+      linewidth=0.5,
+      alpha=1,
+      xlabel='X label',
+      ylabel='Y label',
+      zlabel='Z label',
+      title='Title',
+      arrows=[],
+      equal_axis=False
+    ):
+    fig, ax = self.get_figax(is3d=True)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_zlabel(zlabel)
+    ax.set_title(title)
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+
+
+    ax.scatter(
+        x,
+        y,
+        z,
+        alpha=alpha,
+        c=self.c_orange,
+        edgecolor='#555555'
+    )
+
+    ax.grid(self.use_grid, color=self.grid_color)
+
+    if equal_axis == True:
+      plt.axis('equal')
+
+    # plt.savefig((title + str(np.random.rand(1)[0]) + '.png'), facecolor=self.background_color, dpi=180)
     plt.show()
 
   def histogram(
@@ -124,6 +167,7 @@ class Plotify:
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
 
     plt.show()
+    
 
   def bar(
       self,
@@ -162,6 +206,8 @@ class Plotify:
     plt.tight_layout()
     if show == True: plt.show()
     
+    # plt.savefig((title + str(np.random.rand(1)[0]) + '.png'), facecolor=self.background_color, dpi=120)
+
     return ax
 
   def plot(
@@ -185,12 +231,19 @@ class Plotify:
     return
 
 
-  def get_figax(self):
-    fig, ax = plt.subplots()
+  def get_figax(self, is3d=False):
+    if is3d == False:
+      fig, ax = plt.subplots()
+
+    if is3d == True:
+      fig = plt.figure()
+      ax = fig.add_subplot(111, projection='3d')
+      ax.xaxis.pane.fill = False
+      ax.yaxis.pane.fill = False
+      ax.zaxis.pane.fill = False
 
     fig.patch.set_facecolor(self.background_color)
-
-
+    
     ax.set_facecolor(self.background_color)
     ax.tick_params(colors=self.c_white)
     ax.xaxis.label.set_color(self.c_white)
@@ -199,12 +252,3 @@ class Plotify:
 
     return fig, ax
 
-  def draw_vector(self, v0, v1, ax):
-    arrowprops = dict(
-      arrowstyle='->',
-      linewidth=1,
-      shrinkA=0,
-      shrinkB=0
-    )
-
-    ax.annotate('', v1, v0, arrowprops=arrowprops)

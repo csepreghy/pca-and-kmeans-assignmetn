@@ -9,127 +9,77 @@ plotify = Plotify()
 plt.style.use('ggplot')
 
 # input: datamatrix as loaded by numpy.loadtxt('dataset.txt')
-# output:  1) the eigen_values in a vector (numpy array) in descending order
-#          2) the unit eigen_vectors in a matrix (numpy array) with each column being an 
+# output:  1) the eigenvalues in a vector (numpy array) in descending order
+#          2) the unit eigenvectors in a matrix (numpy array) with each column being an 
 #             eigenvector (in the same order as its associated eigenvalue)
 #
-# note: make sure the order of the eigen_values (the projected variance) is decreasing, and
-# the eigen_vectors have the same order as their associated eigen_values
+# note: make sure the order of the eigenvalues (the projected variance) is decreasing, and
+# the eigenvectors have the same order as their associated eigenvalues
 
 
-def pca(X, show_pc_plots=True, show_scatter_plot=True):
-  eigen_values = []
-  eigen_vectors = []
+def pca(X, show_pc_plots=False, with_std=False):
+  eigenvalues = []
+  eigenvectors = []
 
-  # First we standardize the data to get unit vectors for the eigenvectors
-  scaler = StandardScaler(with_mean=True, with_std=True)
+  
+  scaler = StandardScaler(with_std=with_std, with_mean=True)
+
   X = scaler.fit_transform(X)
+
+  mean = np.mean(X, axis=0)
 
   covariance_matrix = np.cov(X.T)
 
-  eigen_values, eigen_vectors = np.linalg.eig(covariance_matrix)
-  key = np.argsort(eigen_values)[::-1][:len(eigen_values)]
-  eigen_values, eigen_vectors = eigen_values[key], eigen_vectors[:, key]
-
-
-
-  if show_scatter_plot == True:
+  eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
   
-    # Only for visual pruposes. Skipping this step would produce equally valid eigenvectors
-    if len(eigen_values) == 2:
-      eigen_vectors[0] = -eigen_vectors[0]
+  key = np.argsort(eigenvalues)[::-1][:len(eigenvalues)]
+  eigenvalues, eigenvectors = eigenvalues[key], eigenvectors[:, key]
+  
+  unit_eigenvectors = []
+  
+  # create the unit vectors out of eigenvectors
+  for v in eigenvectors:
+    unit_eigenvectors.append(v / np.linalg.norm(v))
 
-    arrows = []
-    
-    for vector, value in zip(eigen_vectors, eigen_values):
-      arrow = {
-        'x': 0,
-        'y': 0,
-        'dx': np.sqrt(value) * vector[0],
-        'dy': np.sqrt(value) * vector[1],
-        'width': 0.03,
-        'color': '#4FB99F'
-      }
 
-      arrows.append(arrow)
-
-    plotify.scatter_plot(
-      x_list=[X[:, 0]],
-      y_list=[X[:, 1]],
-      linewidth=0.25,
-      alpha=1,
-      xlabel='Unemployment rate (%)',
-      ylabel='murders per year per 1,000,000 inhabitants',
-      title='Murder rates in correlaction with unemployment \n (Standardized)',
-      legend_labels=(''),
-      arrows=arrows,
-      equal_axis=True
-    )
-
-  pca = PCA(n_components=len(eigen_values))
+  pca = PCA(n_components=len(eigenvalues))
   pca.fit(X)
 
-  print('pca.explained_variance_\n', pca.explained_variance_)
-  print('eigen_values \n', eigen_values)
-
-  print('pca.components_[0]\n', pca.components_)
-  print('eigen_vectors[0]\n', eigen_vectors)
-
-
-  # Make a list of (eigenvalue, eigenvector) tuples
-  eig_pairs = [(np.abs(eigen_values[i]), eigen_vectors[:, i])
-              for i in range(len(eigen_values))]
-
-  # Sort the (eigenvalue, eigenvector) tuples from high to low
-  eig_pairs.sort()
-  eig_pairs.reverse()
-
-  # Visually confirm that the list is correctly sorted by decreasing eigenvalues
-  print('Eigenvalues in descending order:')
-  for i in eig_pairs:
-      print(i[0])
   
-  total = sum(eigen_values)
-  
-  print('total \n', total)
+  total = sum(eigenvalues)
 
-  var_exp = [(i / total)*100 for i in sorted(eigen_values, reverse=True)]
+  var_exp = [(i / total)*100 for i in sorted(eigenvalues, reverse=True)]
 
   total_cumulative_explain_varience = 0
   cumulative_explain_variences = []
 
-  for i, eigen_value in enumerate(sorted(eigen_values, reverse=True)):
+  for i, eigen_value in enumerate(sorted(eigenvalues, reverse=True)):
     percentage = eigen_value / total * 100
-    print('percentage', percentage)
     total_cumulative_explain_varience += percentage
     cumulative_explain_variences.append(total_cumulative_explain_varience)
-
-  
-
 
   print('cumulative_explain_variences', cumulative_explain_variences)
   
   if show_pc_plots == True:
     xticks = []
-    for _ in range(len(eigen_values)):
+    for _ in range(len(eigenvalues)):
       xticks.append('PC ' + str(_))
 
     plotify.bar(
-      x_list=range(len(eigen_values)),
+      x_list=range(len(eigenvalues)),
       y_list=var_exp,
-      title='PCA Analysis',
+      title='Explained Variance by PC',
       ylabel='% Variance Explained',
+      xlabel='PCs in order of descending variance',
       xticks=xticks,
       rotation=30
     )
 
     plotify.plot(
       y_list=cumulative_explain_variences,
-      title='PCA Analysis',
+      title='Cumulative Explained Variance',
       ylabel='% Variance Explained',
       xlabel='Number of Features',
     )
 
-
-  return eigen_values, eigen_vectors
-
+  return eigenvalues, unit_eigenvectors, mean
